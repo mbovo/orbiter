@@ -1,5 +1,5 @@
 {
-    "memo": "4aea875d25b0b1b6cbcf98ad35f24d7c1f5db6fbd93f7d506e280b379a51b71e",
+    "memo": "5eb8491c0befc95b1a13773370b470ae2d536a28002b40a7df9750516f25b910",
     "projects": [
         {
             "name": "github.com/Microsoft/go-winio",
@@ -23,6 +23,14 @@
             "revision": "4239b77079c7b5d1243b7b4736304ce8ddb6f0f2",
             "packages": [
                 "."
+            ]
+        },
+        {
+            "name": "github.com/beorn7/perks",
+            "branch": "master",
+            "revision": "4c0e84591b9aa9e6dcfdf3e020114cd81f89d5f9",
+            "packages": [
+                "quantile"
             ]
         },
         {
@@ -127,6 +135,14 @@
             ]
         },
         {
+            "name": "github.com/matttproud/golang_protobuf_extensions",
+            "version": "v1.0.0",
+            "revision": "3247c84500bff8d9fb6d579d800f20b3e091582c",
+            "packages": [
+                "pbutil"
+            ]
+        },
+        {
             "name": "github.com/mitchellh/cli",
             "branch": "master",
             "revision": "494eb006fe29e9dc75fea6da4df4818f7e046b73",
@@ -146,6 +162,39 @@
             "name": "github.com/pkg/errors",
             "version": "v0.8.0",
             "revision": "3866ebc348c54054262feae422da428fe6cf147d",
+            "packages": [
+                "."
+            ]
+        },
+        {
+            "name": "github.com/prometheus/client_golang",
+            "version": "v0.8.0",
+            "revision": "c5b7fccd204277076155f10851dad72b76a49317",
+            "packages": [
+                "prometheus/promhttp"
+            ]
+        },
+        {
+            "name": "github.com/prometheus/client_model",
+            "branch": "master",
+            "revision": "6f3806018612930941127f2a7c6c453ba2c527d2",
+            "packages": [
+                "go"
+            ]
+        },
+        {
+            "name": "github.com/prometheus/common",
+            "branch": "master",
+            "revision": "49fee292b27bfff7f354ee0f64e1bc4850462edf",
+            "packages": [
+                "expfmt",
+                "model"
+            ]
+        },
+        {
+            "name": "github.com/prometheus/procfs",
+            "branch": "master",
+            "revision": "a1dba9ce8baed984a2495b658c82687f8157b98f",
             "packages": [
                 "."
             ]
