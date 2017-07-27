@@ -4,26 +4,26 @@
 [[projects]]
   name = "github.com/Microsoft/go-winio"
   packages = ["."]
-  revision = "f533f7a102197536779ea3a8cb881d639e21ec5a"
-  version = "v0.4.2"
+  revision = "7ff89941bcb93df2e962467fb073c6e997b13cf0"
+  version = "v0.4.4"
 
 [[projects]]
   branch = "master"
   name = "github.com/Sirupsen/logrus"
   packages = ["."]
-  revision = "61e43dc76f7ee59a82bdf3d71033dc12bea4c77d"
+  revision = "9aa7601a1185e3bc8a0d3f87b1a55b05df0102e4"
 
 [[projects]]
   branch = "master"
   name = "github.com/armon/go-radix"
   packages = ["."]
-  revision = "4239b77079c7b5d1243b7b4736304ce8ddb6f0f2"
+  revision = "1fca145dffbcaa8fe914309b1ec0cfc67500fe61"
 
 [[projects]]
-  branch = "master"
   name = "github.com/bgentry/speakeasy"
   packages = ["."]
-  revision = "675b82c74c0ed12283ee81ba8a534c8982c07b85"
+  revision = "4aabc24848ce5fd31929f7d1e4ea74d3709c14cd"
+  version = "v0.1.0"
 
 [[projects]]
   name = "github.com/digitalocean/godo"
@@ -34,14 +34,14 @@
 [[projects]]
   name = "github.com/docker/distribution"
   packages = ["digest","reference"]
-  revision = "a25b9ef0c9fe242ac04bb20d3a028442b7d266b6"
-  version = "v2.6.1"
+  revision = "48294d928ced5dd9b378f7fd7c6f5da3ff3f2c89"
+  version = "v2.6.2"
 
 [[projects]]
+  branch = "master"
   name = "github.com/docker/docker"
-  packages = ["api/types","api/types/blkiodev","api/types/container","api/types/events","api/types/filters","api/types/mount","api/types/network","api/types/reference","api/types/registry","api/types/strslice","api/types/swarm","api/types/time","api/types/versions","api/types/volume","client","pkg/tlsconfig"]
-  revision = "092cba3727bb9b4a2f0e922cd6c0f93ea270e363"
-  version = "v1.13.1"
+  packages = ["api","api/types","api/types/blkiodev","api/types/container","api/types/events","api/types/filters","api/types/image","api/types/mount","api/types/network","api/types/registry","api/types/strslice","api/types/swarm","api/types/swarm/runtime","api/types/time","api/types/versions","api/types/volume","client","pkg/ioutils","pkg/longpath","pkg/mount","pkg/system","pkg/tlsconfig"]
+  revision = "885cd5fbe53211190390c434acf92548b5e6f5ee"
 
 [[projects]]
   name = "github.com/docker/go-connections"
@@ -50,22 +50,34 @@
   version = "v0.2.1"
 
 [[projects]]
-  branch = "master"
   name = "github.com/docker/go-units"
   packages = ["."]
-  revision = "0dadbb0345b35ec7ef35e228dabb8de89a65bf52"
+  revision = "f2d77a61e3c169b43402a0a1e84f06daf29b8190"
+  version = "v0.3.1"
+
+[[projects]]
+  branch = "master"
+  name = "github.com/docker/libtrust"
+  packages = ["."]
+  revision = "aabc10ec26b754e797f9028f4589c5b7bd90dc20"
 
 [[projects]]
   branch = "v2"
   name = "github.com/go-yaml/yaml"
   packages = ["."]
-  revision = "a5b47d31c556af34a302ce5d659e6fea44d90de0"
+  revision = "25c4ec802a7d637f88d584ab26798e94ad14c13b"
+
+[[projects]]
+  name = "github.com/gogo/protobuf"
+  packages = ["proto"]
+  revision = "100ba4e885062801d56799d78530b73b178a78f3"
+  version = "v0.4"
 
 [[projects]]
   branch = "master"
   name = "github.com/golang/protobuf"
   packages = ["proto"]
-  revision = "6a1fa9404c0aebf36c879bc50152edcc953910d2"
+  revision = "748d386b5c1ea99658fd69fe9f03991ce86a90c1"
 
 [[projects]]
   branch = "master"
@@ -83,19 +95,43 @@
   branch = "master"
   name = "github.com/gorilla/mux"
   packages = ["."]
-  revision = "757bef944d0f21880861c2dd9c871ca543023cba"
+  revision = "ac112f7d75a0714af1bd86ab17749b31f7809640"
 
 [[projects]]
   branch = "master"
+  name = "github.com/hashicorp/errwrap"
+  packages = ["."]
+  revision = "7554cd9344cec97297fa6649b055a8c98c2a1e55"
+
+[[projects]]
+  branch = "master"
+  name = "github.com/hashicorp/go-multierror"
+  packages = ["."]
+  revision = "83588e72410abfbe4df460eeb6f30841ae47d4c4"
+
+[[projects]]
   name = "github.com/mattn/go-isatty"
   packages = ["."]
-  revision = "30a891c33c7cde7b02a981314b4228ec99380cca"
+  revision = "fc9e8d8ef48496124e79ae0df75490096eccf6fe"
+  version = "v0.0.2"
 
 [[projects]]
   branch = "master"
   name = "github.com/mitchellh/cli"
   packages = ["."]
-  revision = "16bda1254c1d199d9f10a4b90060eda75221a006"
+  revision = "921cc83dadc195c0cd67f9df3a6ec822400a1df5"
+
+[[projects]]
+  name = "github.com/opencontainers/go-digest"
+  packages = ["."]
+  revision = "aa2ec055abd10d26d539eb630a92241b781ce4bc"
+  version = "v1.0.0-rc0"
+
+[[projects]]
+  name = "github.com/opencontainers/image-spec"
+  packages = ["specs-go","specs-go/v1"]
+  revision = "ab7389ef9f50030c9b245bc16b981c7ddf192882"
+  version = "v1.0.0"
 
 [[projects]]
   name = "github.com/opencontainers/runc"
@@ -104,10 +140,16 @@
   version = "v0.1.1"
 
 [[projects]]
-  branch = "master"
   name = "github.com/pkg/errors"
   packages = ["."]
-  revision = "248dadf4e9068a0b3e79f02ed0a610d935de5302"
+  revision = "645ef00459ed84a119197bfb8d8205042c6df63d"
+  version = "v0.8.0"
+
+[[projects]]
+  branch = "master"
+  name = "github.com/posener/complete"
+  packages = [".","cmd","cmd/install","match"]
+  revision = "e8d6fef54b6283f8bd3fbcb4a7de8884eb540293"
 
 [[projects]]
   branch = "master"
@@ -116,21 +158,22 @@
   revision = "ac974c61c2f990f4115b119354b5e0b47550e888"
 
 [[projects]]
+  branch = "master"
   name = "golang.org/x/net"
   packages = ["context","context/ctxhttp","proxy"]
-  revision = "84f0e6f92b10139f986b1756e149a7d9de270cdc"
+  revision = "f5079bd7f6f74e23c4d65efa0f4ce14cbd6a3c0f"
 
 [[projects]]
   branch = "master"
   name = "golang.org/x/oauth2"
   packages = [".","internal"]
-  revision = "ad516a297a9f2a74ecc244861b298c94bdd28b9d"
+  revision = "b53b38ad8a6435bd399ea76d0fa74f23149cca4e"
 
 [[projects]]
   branch = "master"
   name = "golang.org/x/sys"
   packages = ["unix","windows"]
-  revision = "94b76065f2d2081d0fef24a6e67c571f51a6408a"
+  revision = "35ef4487ce0a1ea5d4b616ffe71e34febe723695"
 
 [[projects]]
   name = "google.golang.org/appengine"
@@ -141,6 +184,6 @@
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "dde165bf5c4cade201ea08f7e258626438a50bde06a9909a5b71fd2dae95381a"
+  inputs-digest = "bcc61061443e59657d9c7b878ff5527a85fdbf4e8c89a8ddab74a4f3f95bfab8"
   solver-name = "gps-cdcl"
   solver-version = 1

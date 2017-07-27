@@ -76,19 +76,15 @@
 
 [[constraint]]
   name = "github.com/docker/distribution"
-  version = "2.6.1"
+  branch = "release/2.6"
 
 [[constraint]]
   name = "github.com/docker/docker"
-  version = "1.13.1"
+  branch = "master"
 
 [[constraint]]
   name = "github.com/docker/go-connections"
   version = "0.2.1"
-
-[[constraint]]
-  branch = "v2"
-  name = "github.com/go-yaml/yaml"
 
 [[constraint]]
   name = "github.com/gorilla/context"

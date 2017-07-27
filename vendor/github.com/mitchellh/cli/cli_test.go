@@ -3,11 +3,19 @@ package cli
 import (
 	"bytes"
 	"fmt"
+	"os"
 	"reflect"
 	"sort"
 	"strings"
 	"testing"
+
+	"github.com/posener/complete"
 )
+
+// envComplete is the env var that the complete library sets to specify
+// it should be calculating an auto-completion. This isn't exported so we
+// reproduce it here. If it changes then we'll have to update this.
+const envComplete = "COMP_LINE"
 
 func TestCLIIsHelp(t *testing.T) {
 	testCases := []struct {
@@ -230,7 +238,7 @@ func TestCLIRun_helpNested(t *testing.T) {
 		t.Fatalf("Error: %s", err)
 	}
 
-	if code != 1 {
+	if code != 0 {
 		t.Fatalf("Code: %d", code)
 	}
 
@@ -299,8 +307,47 @@ func TestCLIRun_nestedMissingParent(t *testing.T) {
 
 func TestCLIRun_printHelp(t *testing.T) {
 	testCases := [][]string{
-		{},
 		{"-h"},
+		{"--help"},
+	}
+
+	for _, testCase := range testCases {
+		buf := new(bytes.Buffer)
+		helpText := "foo"
+
+		cli := &CLI{
+			Args: testCase,
+			Commands: map[string]CommandFactory{
+				"foo": func() (Command, error) {
+					return new(MockCommand), nil
+				},
+			},
+			HelpFunc: func(map[string]CommandFactory) string {
+				return helpText
+			},
+			HelpWriter: buf,
+		}
+
+		code, err := cli.Run()
+		if err != nil {
+			t.Errorf("Args: %#v. Error: %s", testCase, err)
+			continue
+		}
+
+		if code != 0 {
+			t.Errorf("Args: %#v. Code: %d", testCase, code)
+			continue
+		}
+
+		if !strings.Contains(buf.String(), helpText) {
+			t.Errorf("Args: %#v. Text: %v", testCase, buf.String())
+		}
+	}
+}
+
+func TestCLIRun_printHelpIllegal(t *testing.T) {
+	testCases := [][]string{
+		{},
 		{"i-dont-exist"},
 		{"-bad-flag", "foo"},
 	}
@@ -384,7 +431,7 @@ func TestCLIRun_printCommandHelp(t *testing.T) {
 			t.Fatalf("err: %s", err)
 		}
 
-		if exitCode != 1 {
+		if exitCode != 0 {
 			t.Fatalf("bad exit code: %d", exitCode)
 		}
 
@@ -421,7 +468,7 @@ func TestCLIRun_printCommandHelpNested(t *testing.T) {
 			t.Fatalf("err: %s", err)
 		}
 
-		if exitCode != 1 {
+		if exitCode != 0 {
 			t.Fatalf("bad exit code: %d", exitCode)
 		}
 
@@ -476,12 +523,61 @@ func TestCLIRun_printCommandHelpSubcommands(t *testing.T) {
 			t.Fatalf("err: %s", err)
 		}
 
-		if exitCode != 1 {
+		if exitCode != 0 {
 			t.Fatalf("bad exit code: %d", exitCode)
 		}
 
 		if buf.String() != testCommandHelpSubcommandsOutput {
 			t.Fatalf("bad: %#v\n\n'%#v'\n\n'%#v'", args, buf.String(), testCommandHelpSubcommandsOutput)
+		}
+	}
+}
+
+func TestCLIRun_printCommandHelpSubcommandsNestedTwoLevel(t *testing.T) {
+	testCases := [][]string{
+		{"--help", "L1"},
+		{"-h", "L1"},
+	}
+
+	for _, args := range testCases {
+		command := &MockCommand{
+			HelpText: "donuts",
+		}
+
+		buf := new(bytes.Buffer)
+		cli := &CLI{
+			Args: args,
+			Commands: map[string]CommandFactory{
+				"L1": func() (Command, error) {
+					return command, nil
+				},
+				"L1 L2A": func() (Command, error) {
+					return &MockCommand{SynopsisText: "hi!"}, nil
+				},
+				"L1 L2B": func() (Command, error) {
+					return &MockCommand{SynopsisText: "hi!"}, nil
+				},
+				"L1 L2A L3A": func() (Command, error) {
+					return &MockCommand{SynopsisText: "hi!"}, nil
+				},
+				"L1 L2A L3B": func() (Command, error) {
+					return &MockCommand{SynopsisText: "hi!"}, nil
+				},
+			},
+			HelpWriter: buf,
+		}
+
+		exitCode, err := cli.Run()
+		if err != nil {
+			t.Fatalf("err: %s", err)
+		}
+
+		if exitCode != 0 {
+			t.Fatalf("bad exit code: %d", exitCode)
+		}
+
+		if buf.String() != testCommandHelpSubcommandsTwoLevelOutput {
+			t.Fatalf("bad: %#v\n\n%s\n\n%s", args, buf.String(), testCommandHelpSubcommandsOutput)
 		}
 	}
 }
@@ -517,13 +613,370 @@ func TestCLIRun_printCommandHelpTemplate(t *testing.T) {
 			t.Fatalf("err: %s", err)
 		}
 
-		if exitCode != 1 {
+		if exitCode != 0 {
 			t.Fatalf("bad exit code: %d", exitCode)
 		}
 
 		if buf.String() != "hello "+command.HelpText+"\n" {
 			t.Fatalf("bad: %#v", buf.String())
 		}
+	}
+}
+
+func TestCLIRun_autocompleteBoth(t *testing.T) {
+	command := new(MockCommand)
+	cli := &CLI{
+		Args: []string{
+			"-" + defaultAutocompleteInstall,
+			"-" + defaultAutocompleteUninstall,
+		},
+		Commands: map[string]CommandFactory{
+			"foo": func() (Command, error) {
+				return command, nil
+			},
+		},
+
+		Name:                  "foo",
+		Autocomplete:          true,
+		autocompleteInstaller: &mockAutocompleteInstaller{},
+	}
+
+	exitCode, err := cli.Run()
+	if err == nil {
+		t.Fatal("should error")
+	}
+
+	if exitCode != 1 {
+		t.Fatalf("bad: %d", exitCode)
+	}
+
+	if command.RunCalled {
+		t.Fatalf("run should not be called")
+	}
+}
+
+func TestCLIRun_autocompleteInstall(t *testing.T) {
+	command := new(MockCommand)
+	installer := new(mockAutocompleteInstaller)
+	cli := &CLI{
+		Args: []string{
+			"-" + defaultAutocompleteInstall,
+		},
+		Commands: map[string]CommandFactory{
+			"foo": func() (Command, error) {
+				return command, nil
+			},
+		},
+
+		Name:                  "foo",
+		Autocomplete:          true,
+		autocompleteInstaller: installer,
+	}
+
+	exitCode, err := cli.Run()
+	if err != nil {
+		t.Fatalf("err: %s", err)
+	}
+
+	if exitCode != 0 {
+		t.Fatalf("bad: %d", exitCode)
+	}
+
+	if command.RunCalled {
+		t.Fatalf("run should not be called")
+	}
+
+	if !installer.InstallCalled {
+		t.Fatal("should call install")
+	}
+}
+
+func TestCLIRun_autocompleteUninstall(t *testing.T) {
+	command := new(MockCommand)
+	installer := new(mockAutocompleteInstaller)
+	cli := &CLI{
+		Args: []string{
+			"-" + defaultAutocompleteUninstall,
+		},
+		Commands: map[string]CommandFactory{
+			"foo": func() (Command, error) {
+				return command, nil
+			},
+		},
+
+		Name:                  "foo",
+		Autocomplete:          true,
+		autocompleteInstaller: installer,
+	}
+
+	exitCode, err := cli.Run()
+	if err != nil {
+		t.Fatalf("err: %s", err)
+	}
+
+	if exitCode != 0 {
+		t.Fatalf("bad: %d", exitCode)
+	}
+
+	if command.RunCalled {
+		t.Fatalf("run should not be called")
+	}
+
+	if !installer.UninstallCalled {
+		t.Fatal("should call uninstall")
+	}
+}
+
+func TestCLIRun_autocompleteNoName(t *testing.T) {
+	command := new(MockCommand)
+	installer := new(mockAutocompleteInstaller)
+	cli := &CLI{
+		Args: []string{"foo"},
+		Commands: map[string]CommandFactory{
+			"foo": func() (Command, error) {
+				return command, nil
+			},
+		},
+
+		Autocomplete:          true,
+		autocompleteInstaller: installer,
+	}
+
+	exitCode, err := cli.Run()
+	if err == nil {
+		t.Fatal("should error")
+	}
+
+	if exitCode != 1 {
+		t.Fatalf("bad: %d", exitCode)
+	}
+
+	if command.RunCalled {
+		t.Fatalf("run should not be called")
+	}
+}
+
+// Test that running `-autocomplete-install<tab>` doesn't execute
+// the autocomplete installer. This was a bug reported by Nomad.
+func TestCLIRun_autocompleteInstallTab(t *testing.T) {
+	command := new(MockCommand)
+	installer := new(mockAutocompleteInstaller)
+	cli := &CLI{
+		Args: []string{
+			"-" + defaultAutocompleteInstall,
+		},
+		Commands: map[string]CommandFactory{
+			"foo": func() (Command, error) {
+				return command, nil
+			},
+		},
+
+		Name:                  "foo",
+		Autocomplete:          true,
+		autocompleteInstaller: installer,
+	}
+
+	defer testAutocomplete(t, "foo -autocomplete-install")()
+
+	exitCode, err := cli.Run()
+	if err != nil {
+		t.Fatalf("err: %s", err)
+	}
+
+	if exitCode != 0 {
+		t.Fatalf("bad: %d", exitCode)
+	}
+
+	if command.RunCalled {
+		t.Fatalf("run should not be called")
+	}
+
+	if installer.InstallCalled {
+		t.Fatal("should not call install")
+	}
+}
+
+func TestCLIRun_autocompleteHelpTab(t *testing.T) {
+	buf := new(bytes.Buffer)
+	command := new(MockCommand)
+	installer := new(mockAutocompleteInstaller)
+	cli := &CLI{
+		Args: []string{
+			"-help",
+		},
+		Commands: map[string]CommandFactory{
+			"foo": func() (Command, error) {
+				return command, nil
+			},
+		},
+
+		Name:                  "foo",
+		HelpWriter:            buf,
+		Autocomplete:          true,
+		autocompleteInstaller: installer,
+	}
+
+	defer testAutocomplete(t, "foo -help")()
+
+	exitCode, err := cli.Run()
+	if err != nil {
+		t.Fatalf("err: %s", err)
+	}
+
+	if exitCode != 0 {
+		t.Fatalf("bad: %d", exitCode)
+	}
+
+	if command.RunCalled {
+		t.Fatalf("run should not be called")
+	}
+
+	if buf.String() != "" {
+		t.Fatal("help should be empty")
+	}
+}
+
+func TestCLIAutocomplete_root(t *testing.T) {
+	cases := []struct {
+		Completed []string
+		Last      string
+		Expected  []string
+	}{
+		{nil, "-v", []string{"-version"}},
+		{nil, "-h", []string{"-help"}},
+		{nil, "-a", []string{
+			"-" + defaultAutocompleteInstall,
+			"-" + defaultAutocompleteUninstall,
+		}},
+
+		{nil, "f", []string{"foo"}},
+		{nil, "n", []string{"nodes", "noodles"}},
+		{nil, "noo", []string{"noodles"}},
+		{nil, "su", []string{"sub"}},
+
+		// Make sure global flags work on subcommands
+		{[]string{"sub"}, "-v", nil},
+		{[]string{"sub"}, "o", []string{"one"}},
+	}
+
+	for _, tc := range cases {
+		t.Run(tc.Last, func(t *testing.T) {
+			command := new(MockCommand)
+			cli := &CLI{
+				Commands: map[string]CommandFactory{
+					"foo":     func() (Command, error) { return command, nil },
+					"nodes":   func() (Command, error) { return command, nil },
+					"noodles": func() (Command, error) { return command, nil },
+					"sub one": func() (Command, error) { return command, nil },
+					"sub two": func() (Command, error) { return command, nil },
+				},
+
+				Autocomplete: true,
+			}
+
+			// Initialize
+			cli.init()
+
+			// Test the autocompleter
+			actual := cli.autocomplete.Command.Predict(complete.Args{
+				Completed: tc.Completed,
+				Last:      tc.Last,
+			})
+			sort.Strings(actual)
+
+			if !reflect.DeepEqual(actual, tc.Expected) {
+				t.Fatalf("bad prediction: %#v", actual)
+			}
+		})
+	}
+}
+
+func TestCLIAutocomplete_rootGlobalFlags(t *testing.T) {
+	cases := []struct {
+		Completed []string
+		Last      string
+		Expected  []string
+	}{
+		{nil, "-v", []string{"-version"}},
+		{nil, "-t", []string{"-tubes"}},
+	}
+
+	for _, tc := range cases {
+		t.Run(tc.Last, func(t *testing.T) {
+			command := new(MockCommand)
+			cli := &CLI{
+				Commands: map[string]CommandFactory{
+					"foo": func() (Command, error) { return command, nil },
+				},
+
+				Autocomplete: true,
+				AutocompleteGlobalFlags: map[string]complete.Predictor{
+					"-tubes": complete.PredictNothing,
+				},
+			}
+
+			// Initialize
+			cli.init()
+
+			// Test the autocompleter
+			actual := cli.autocomplete.Command.Predict(complete.Args{
+				Completed: tc.Completed,
+				Last:      tc.Last,
+			})
+			sort.Strings(actual)
+
+			if !reflect.DeepEqual(actual, tc.Expected) {
+				t.Fatalf("bad prediction: %#v", actual)
+			}
+		})
+	}
+}
+
+func TestCLIAutocomplete_subcommandArgs(t *testing.T) {
+	cases := []struct {
+		Completed []string
+		Last      string
+		Expected  []string
+	}{
+		{[]string{"foo"}, "RE", []string{"README.md"}},
+		{[]string{"foo", "-go"}, "asdf", []string{"yo"}},
+	}
+
+	for _, tc := range cases {
+		t.Run(tc.Last, func(t *testing.T) {
+			command := new(MockCommandAutocomplete)
+			command.AutocompleteArgsValue = complete.PredictFiles("*")
+			command.AutocompleteFlagsValue = map[string]complete.Predictor{
+				"-go": complete.PredictFunc(func(complete.Args) []string {
+					return []string{"yo"}
+				}),
+			}
+
+			cli := &CLI{
+				Commands: map[string]CommandFactory{
+					"foo": func() (Command, error) {
+						return command, nil
+					},
+				},
+
+				Autocomplete: true,
+			}
+
+			// Initialize
+			cli.init()
+
+			// Test the autocompleter
+			actual := cli.autocomplete.Command.Predict(complete.Args{
+				Completed:     tc.Completed,
+				Last:          tc.Last,
+				LastCompleted: tc.Completed[len(tc.Completed)-1],
+			})
+			sort.Strings(actual)
+
+			if !reflect.DeepEqual(actual, tc.Expected) {
+				t.Fatalf("bad prediction: %#v", actual)
+			}
+		})
 	}
 }
 
@@ -581,22 +1034,57 @@ func TestCLISubcommand_nested(t *testing.T) {
 	}
 }
 
+// testAutocomplete sets up the environment to behave like a <tab> was
+// pressed in a shell to autocomplete a command.
+func testAutocomplete(t *testing.T, input string) func() {
+	// This env var is used to trigger autocomplete
+	os.Setenv(envComplete, input)
+
+	// Change stdout/stderr since the autocompleter writes directly to them.
+	oldStdout := os.Stdout
+	oldStderr := os.Stderr
+
+	r, w, err := os.Pipe()
+	if err != nil {
+		t.Fatalf("err: %s", err)
+	}
+
+	os.Stdout = w
+	os.Stderr = w
+
+	return func() {
+		// Reset our env
+		os.Unsetenv(envComplete)
+
+		// Reset stdout, stderr
+		os.Stdout = oldStdout
+		os.Stderr = oldStderr
+
+		// Close our pipe
+		r.Close()
+		w.Close()
+	}
+}
+
 const testCommandNestedMissingParent = `This command is accessed by using one of the subcommands below.
 
 Subcommands:
-
     bar    hi!
-
 `
 
 const testCommandHelpSubcommandsOutput = `donuts
 
 Subcommands:
-
     banana    hi!
     bar       hi!
     longer    hi!
     zap       hi!
     zip       hi!
+`
 
+const testCommandHelpSubcommandsTwoLevelOutput = `donuts
+
+Subcommands:
+    L2A    hi!
+    L2B    hi!
 `
