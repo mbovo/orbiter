@@ -39,7 +39,10 @@ func (p SwarmProvider) Name() string {
 
 func (p SwarmProvider) Scale(serviceId string, target int, direction bool) error {
 	ctx := context.Background()
-	service, _, err := p.dockerClient.ServiceInspectWithRaw(ctx, serviceId)
+	siopts := types.ServiceInspectOptions{}
+	siopts.InsertDefaults = true
+
+	service, _, err := p.dockerClient.ServiceInspectWithRaw(ctx, serviceId, siopts)
 	if err != nil {
 		logrus.WithFields(logrus.Fields{
 			"error":    err.Error(),
