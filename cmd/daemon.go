@@ -16,6 +16,7 @@ import (
 	"github.com/gianarb/orbiter/api"
 	"github.com/gianarb/orbiter/autoscaler"
 	"github.com/gianarb/orbiter/core"
+	"github.com/pkg/profile"
 	"time"
 )
 
@@ -24,6 +25,10 @@ type DaemonCmd struct {
 }
 
 func (c *DaemonCmd) Run(args []string) int {
+
+	var prof interface {
+		Stop()
+	}
 	logrus.Info("orbiter started")
 	var port string
 	var configPath string
@@ -39,6 +44,9 @@ func (c *DaemonCmd) Run(args []string) int {
 	if debug == true {
 		logrus.SetLevel(logrus.DebugLevel)
 		logrus.Debug("Daemon started in debug mode")
+
+		prof = profile.Start(profile.CPUProfile, profile.NoShutdownHook)
+
 	}
 	coreEngine := core.Core{
 		Autoscalers: autoscaler.Autoscalers{},
@@ -75,6 +83,9 @@ func (c *DaemonCmd) Run(args []string) int {
 		<-sigchan
 		timer1.Stop()
 		logrus.Info("Stopping and cleaning. Bye!")
+		if logrus.GetLevel() == logrus.DebugLevel {
+			prof.Stop()
+		}
 		os.Exit(0)
 	}()
 
