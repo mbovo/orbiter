@@ -5,9 +5,9 @@ services:
   - docker
 script:
   #- sudo PATH=$PATH GOPATH=$GOPATH make ci binaries
-  - make ci binaries
+  - make ci
 after_success:
-  - docker login -u $DOCKER_USER -p $DOCKER_PASS
+  - if [ "$TRAVIS_BRANCH" == "master" ] && [ "$TRAVIS_PULL_REQUEST_BRANCH" == "" ]; docker login -u $DOCKER_USER -p $DOCKER_PASS
   - export REPO=gianarb/orbiter
   - if [ "$TRAVIS_BRANCH" == "master" ] && [ "$TRAVIS_PULL_REQUEST_BRANCH" == "" ]; then docker build -f Dockerfile -t $REPO . && docker push $REPO; else echo "I only push from master branch." ; fi
 env:

@@ -80,21 +80,32 @@ scale it can call the outscaler to persist the right action
 
 ```sh
 curl -v -d '{"direction": true}' \
-    http://localhost:8000/handle/infra_scale/docker
+    http://localhost:8000/v1/orbiter/handle/infra_scale/docker
 ```
 Or if you prefer
 
 ```sh
-curl -v -X POST http://localhost:8000/handle/infra_scale/docker/up
+curl -v -X POST http://localhost:8000/v1/orbiter/handle/infra_scale/docker/up
 ```
 
+You can look at the list of services managed by orbiter:
+
+```sh
+curl -v -X GET http://localhost:8000/v1/orbiter/autoscaler
+```
+
+Look at the health to know if everything is working:
+
+```sh
+curl -v -X GET http://localhost:8000/v1/orbiter/halth
+```
 
 ## Autodetect
 The autodetect mode starts when you don't specify any configuration file.
 If you start oribter with the command:
 
 ```
-orbiter daemon -daemon
+orbiter daemon
 ```
 
 It's going to start in autodetect mode. This modality at the moment only fetch
@@ -111,7 +122,7 @@ Let's say that you started a service:
 docker service create --label orbiter=true --name web -p 80:80 nginx
 ```
 When you start orbiter, it's going to auto-register an autoscaler called
-`autodetect_swarm/web`. By default up and down are set to 1 but you can override
+`autoswarm/web`. By default up and down are set to 1 but you can override
 them with the label `orbiter.up=3` and `orbiter.down=2`.
 
 This calability allow you to istantiate orbiter in an extremely easy way in
@@ -148,7 +159,7 @@ func CreateAutoScaler() *autoscaler.Autoscaler{
 ## With docker
 
 ```sh
-docker run -it -v ${PWD}/your.yml:/etc/orbiter.yml -p 8000:8000 gianarb/orbiter
+docker run -it -v ${PWD}/your.yml:/etc/orbiter.yml -p 8000:8000 gianarb/orbiter daemon
 ```
 We are supporting an imag `gianarb/orbiter` in hub.docker.com. You can run it
 with your configuration.
