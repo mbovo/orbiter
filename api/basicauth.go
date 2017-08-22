@@ -7,10 +7,9 @@ import (
 )
 
 type AuthConfig struct {
-	AuthEnabled bool   `split_words:"true" default:"false"`
-	AuthUser    string `split_words:"true" default:"orbiter"`
-	AuthPass    string `split_words:"true" default:"orbiter"`
-	AuthRealm   string `split_words:"true" default:"Restricted"`
+	AuthEnabled    bool              `split_words:"true" default:"false"`
+	AuthRealm      string            `split_words:"true" default:"Restricted"`
+	AuthCredential map[string]string `split_words:"true" default:"orbiter:orbiter"`
 }
 
 func wrap(h http.HandlerFunc, funx ...func(http.HandlerFunc) http.HandlerFunc) http.HandlerFunc {
@@ -39,7 +38,7 @@ func basicAuth(h http.HandlerFunc) http.HandlerFunc {
 			return
 		}
 
-		if ac.AuthUser != u || ac.AuthPass != p {
+		if ac.AuthCredential[u] != p {
 			logrus.Warnf("Invalid username or password for user %s", u)
 			w.WriteHeader(401)
 			w.Write([]byte("Invalid username or password"))
