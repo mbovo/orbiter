@@ -11,12 +11,16 @@ func GetRouter(core *core.Core, eventChannel chan *logrus.Entry) *mux.Router {
 	r := mux.NewRouter()
 
 	var ac AuthConfig
-	e := envconfig.Process("ORBITER", &ac)
+	envconfig.Usage("orbiter", &ac)
+
+	e := envconfig.Process("orbiter", &ac)
 	if e != nil {
 		logrus.Fatal(e.Error())
 	}
 
-	if ac.Enabled {
+	logrus.Infof("Env: %v", ac)
+
+	if ac.AuthEnabled {
 		logrus.Info("Enabling Authentication")
 		r.HandleFunc("/v1/orbiter/handle/{autoscaler_name}/{service_name}", wrap(Handle(&core.Autoscalers), basicAuth)).Methods("POST")
 		r.HandleFunc("/v1/orbiter/handle/{autoscaler_name}/{service_name}/{direction}", wrap(Handle(&core.Autoscalers), basicAuth)).Methods("POST")
