@@ -2,7 +2,6 @@ package api
 
 import (
 	"github.com/Sirupsen/logrus"
-	// 	"github.com/kelseyhightower/envconfig"
 	"net/http"
 	"os"
 	"strconv"
